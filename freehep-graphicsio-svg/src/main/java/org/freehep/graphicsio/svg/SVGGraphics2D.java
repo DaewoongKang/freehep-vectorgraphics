@@ -10,6 +10,7 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
@@ -150,7 +151,7 @@ public class SVGGraphics2D extends AbstractVectorGraphicsIO {
     private String filename;
 
     // The lowerleft and upper right points of the bounding box.
-    private int bbx, bby, bbw, bbh;
+    private int bbx = 0, bby = 0, bbw, bbh;
 
     // The private writer used for this file.
     private OutputStream ros;
@@ -191,6 +192,12 @@ public class SVGGraphics2D extends AbstractVectorGraphicsIO {
         init(os);
         width = size.width;
         height = size.height;
+    }
+
+    public SVGGraphics2D(OutputStream os, Rectangle rect) {
+        this(os, rect.getSize());
+        bbx = rect.x;
+        bby = rect.y;
     }
 
     public SVGGraphics2D(OutputStream os, Component component) {
@@ -234,9 +241,6 @@ public class SVGGraphics2D extends AbstractVectorGraphicsIO {
      * Get the bounding box for this image.
      */
     public void setBoundingBox() {
-        bbx = 0;
-        bby = 0;
-
         Dimension size = getSize();
         bbw = size.width;
         bbh = size.height;
@@ -664,34 +668,16 @@ public class SVGGraphics2D extends AbstractVectorGraphicsIO {
         }
         style.put("stroke", "none");
 
-        // convert tags to string values
-        str = XMLWriter.normalizeText(str);
-
-        // replace leading space by &#00a0; otherwise firefox 1.5 fails
-        if (str.startsWith(" ")) {
-            str = "&#x00a0;" + str.substring(1);
-        }
-
-        os.println(getTransformedString(
-            // general transformation
-            getTransform(),
+        os.println(
             // general clip
             getClippedString(
-                getTransformedString(
-                    // text offset
-                    new AffineTransform(1, 0, 0, 1, x, y),
-                    getTransformedString(
-                        // font transformation and text
-                        getFont().getTransform(),
-                        "<text "
-                            // style
-                            + style(style)
-                            // coordiantes
-                            + " x=\"0\" y=\"0\">"
-                            // text
-                            + str
-                            + "</text>")))));
-    }
+                "<text "
+                + style(style)
+                + " x=\"" + Math.round(x) + "\" y=\"" + Math.round(y) + "\">"
+                + str
+                + "</text>")
+            );
+}
 
     /**
      * Creates the properties list for the given font.

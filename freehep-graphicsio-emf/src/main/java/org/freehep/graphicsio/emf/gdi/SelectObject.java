@@ -1,6 +1,7 @@
 // Copyright 2002, FreeHEP.
 package org.freehep.graphicsio.emf.gdi;
 
+import java.awt.geom.GeneralPath;
 import java.io.IOException;
 
 import org.freehep.graphicsio.emf.EMFInputStream;
@@ -49,6 +50,13 @@ public class SelectObject extends EMFTag {
      */
     public void render(EMFRenderer renderer) {
         GDIObject gdiObject;
+        
+        GeneralPath currentFigure = renderer.getFigure();
+        if (currentFigure != null) {
+            renderer.fillAndDrawOrAppend(currentFigure);
+            renderer.setFigure(null);
+        }
+        
 
         if (index < 0) {
             gdiObject = StockObjects.getStockObject(index);

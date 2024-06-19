@@ -76,7 +76,9 @@ public abstract class AbstractExtTextOut extends EMFTag implements EMFConstants 
         Text text = getText();
         renderer.drawOrAppendText(
             text.getString(),
-            text.getPos().getX(),
-            text.getPos().getY());
+            bounds.getX(),
+            bounds.getY() + bounds.getHeight()*0.8,
+            bounds.getWidth(),
+            bounds.getHeight());
     }
 }

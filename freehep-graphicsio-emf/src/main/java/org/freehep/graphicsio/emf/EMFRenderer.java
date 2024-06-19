@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.awt.Graphics2D;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.BasicStroke;
 import java.awt.Stroke;
 import java.awt.Paint;
@@ -14,6 +15,7 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
+import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
@@ -253,7 +255,10 @@ public class EMFRenderer {
             (int)Math.ceil(bounds.width * TWIP_SCALE),
             (int)Math.ceil(bounds.height * TWIP_SCALE));*/
     }
-
+    public Rectangle getBounds() {
+        return header.getBounds();
+    }
+    
     /**
      * Paints the EMF onto the provided graphics context.
      *
@@ -512,19 +517,7 @@ public class EMFRenderer {
      * @param x x-Position
      * @param y y-Position
      */
-    public void drawOrAppendText(String text, double x, double y) {
-        // TODO: Use explicit widths to pixel-position each character, if present.
-        // TODO: Implement alignment properly.  What we have already seems to work well enough.
-        //            FontRenderContext frc = g2.getFontRenderContext();
-        //            TextLayout layout = new TextLayout(str, g2.getFont(), frc);
-        //            if ((textAlignMode & EMFConstants.TA_CENTER) != 0) {
-        //                layout.draw(g2, x + (width - textWidth) / 2, y);
-        //            } else if ((textAlignMode & EMFConstants.TA_RIGHT) != 0) {
-        //                layout.draw(g2, x + width - textWidth, y);
-        //            } else {
-        //                layout.draw(g2, x, y);
-        //            }
-
+    public void drawOrAppendText(String text, double x, double y, double width, double height) {
         if (path != null) {
             // do not use g2.drawString(str, x, y) to be aware of path
             TextLayout tl = new TextLayout(
@@ -533,8 +526,16 @@ public class EMFRenderer {
                 g2.getFontRenderContext());
             path.append(tl.getOutline(null), false);
         } else {
+            FontRenderContext frc = g2.getFontRenderContext();
+            TextLayout layout = new TextLayout(text, g2.getFont(), frc);
+            double textWidth = layout.getBounds().getWidth();
+            if ((textAlignMode & EMFConstants.TA_CENTER) != 0) {
+                x = x + (width - textWidth) / 2;
+            } else if ((textAlignMode & EMFConstants.TA_RIGHT) != 0) {
+                x = x + width - textWidth;
+            }
             g2.setPaint(textColor);
-            g2.drawString(text, (int)x, (int)y);
+            g2.drawString(text, (float)x, (float)y);
         }
     }
 
